@@ -1,20 +1,34 @@
-<script>
-	export default {
-		data() {
-			return {
-				name: "Vivaldo Gaston",
-				status: "active",
-				tasks: ["TASK1", "TASK2", "TASK3"],
-			};
-		},
-		methods: {
-			toggleStatus() {
-				if (this.status === "active") this.status = "pending";
-				else if (this.status === "pending") this.status = "inactive";
-				else this.status = "active";
-			},
-		},
+<script setup>
+	import { ref, onMounted } from "vue";
+
+	const name = ref("Vivaldo Gaston");
+	const status = ref("active");
+	const tasks = ref(["TASK1", "TASK2", "TASK3"]);
+	const newTask = ref("");
+	const toggleStatus = () => {
+		if (status.value === "active") status.value = "pending";
+		else if (status.value === "pending") status.value = "inactive";
+		else status.value = "active";
 	};
+
+	const addTask = () => {
+		if (newTask.value.trim() != "") tasks.value.push(newTask.value);
+		newTask.value = "";
+	};
+	const deleteTask = (index) => {
+		tasks.value.splice(index, 1);
+	};
+	onMounted(async () => {
+		try {
+			const response = await fetch(
+				"https://jsonplaceholder.typicode.com/todos"
+			);
+			const data = await response.json();
+			tasks.value = data.map((task) => task.title);
+		} catch (error) {
+			console.log("error fetching tasks");
+		}
+	});
 </script>
 
 <template>
@@ -23,11 +37,22 @@
 	<p v-if="status === 'active'">User is active</p>
 	<p v-else-if="status === 'pending'">User is pending</p>
 	<p v-else>User is inactive</p>
+	<form @submit.prevent="addTask">
+		<label for="newTask">Add New task</label>
+		<input type="text" id="newTask" name="newTask" v-model="newTask" />
+		<button type="submit">Submit</button>
+	</form>
+
 	<h2>Tasks</h2>
 	<ul>
-		<li v-for="task in tasks" :key="task">{{ task }}</li>
+		<li v-for="(task, index) in tasks" :key="task">
+			<span>
+				{{ task }}
+			</span>
+			<button @click="deleteTask(index)">X</button>
+		</li>
 	</ul>
-	<a :ref="link">Clicl google</a>
+
 	<button @click="toggleStatus">Change status</button>
 </template>
 
